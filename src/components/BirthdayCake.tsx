@@ -1,6 +1,6 @@
 'use client'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Cylinder, Sphere, Float, Environment } from '@react-three/drei'
+import { OrbitControls, Cylinder, Sphere, Float } from '@react-three/drei'
 import { useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import * as THREE from 'three'
@@ -276,7 +276,10 @@ function CakeScene({ blown }: CakeSceneProps) {
         <pointLight position={[0, 2.8, 0]} intensity={1.5} color="#ffaa33" distance={3} decay={2} />
       )}
 
-      <Environment preset="night" />
+      {/* Manual environment lighting (no external CDN needed) */}
+      <hemisphereLight args={['#1a0533', '#030014', 0.5]} />
+      <pointLight position={[3, 5, 3]} color="#c084fc" intensity={1.5} />
+      <pointLight position={[-3, 3, -3]} color="#ec4899" intensity={1} />
 
       <Float speed={0.6} rotationIntensity={0.05} floatIntensity={0.15}>
         <RotatingCake blown={blown} />

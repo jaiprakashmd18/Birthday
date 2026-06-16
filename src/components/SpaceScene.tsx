@@ -65,18 +65,16 @@ function StarField() {
     }
   })
 
+  // Build geometry imperatively to avoid JSX bufferAttribute API changes across three.js versions
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    return geo
+  }, [positions, colors])
+
   return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          args={[colors, 3]}
-        />
-      </bufferGeometry>
+    <points ref={mesh} geometry={geometry}>
       <pointsMaterial
         size={0.18}
         vertexColors
@@ -248,14 +246,14 @@ function DriftParticles() {
     mesh.current.geometry.attributes.position.needsUpdate = true
   })
 
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    return geo
+  }, [positions])
+
   return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-      </bufferGeometry>
+    <points ref={mesh} geometry={geometry}>
       <pointsMaterial
         size={0.06}
         color="#f9a8d4"
@@ -275,9 +273,12 @@ export default function SpaceScene() {
     <div style={{ position: 'absolute', inset: 0 }}>
       <Canvas
         camera={{ fov: 75, position: [0, 0, 5], near: 0.1, far: 200 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: false }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
         style={{ background: '#030014' }}
+        onCreated={({ gl }) => {
+          gl.setClearColor('#030014')
+        }}
       >
         {/* Fog / nebula atmosphere */}
         <fog attach="fog" args={['#0d0221', 30, 90]} />

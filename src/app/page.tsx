@@ -1,24 +1,43 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import ErrorBoundary from '@/components/ErrorBoundary'
+
+// Minimal section fallback
+const SectionFallback = () => (
+  <div className="flex items-center justify-center py-32">
+    <div className="flex gap-2">
+      {[0, 1, 2].map(i => (
+        <div
+          key={i}
+          className="w-2 h-2 rounded-full animate-pulse"
+          style={{
+            background: 'rgba(168,85,247,0.6)',
+            animationDelay: `${i * 0.2}s`,
+          }}
+        />
+      ))}
+    </div>
+  </div>
+)
 
 // Heavy 3D/canvas components — load client-side only
-const LoadingScreen = dynamic(() => import('@/components/LoadingScreen'), { ssr: false })
-const CustomCursor = dynamic(() => import('@/components/CustomCursor'), { ssr: false })
+const LoadingScreen   = dynamic(() => import('@/components/LoadingScreen'),   { ssr: false, loading: () => <div className="fixed inset-0 bg-[#030014]" /> })
+const CustomCursor    = dynamic(() => import('@/components/CustomCursor'),    { ssr: false })
 const ParticleBackground = dynamic(() => import('@/components/ParticleBackground'), { ssr: false })
-const Navigation = dynamic(() => import('@/components/Navigation'), { ssr: false })
-const HeroSection = dynamic(() => import('@/components/HeroSection'), { ssr: false })
-const MemoryUniverse = dynamic(() => import('@/components/MemoryUniverse'), { ssr: false })
-const TimelineSection = dynamic(() => import('@/components/TimelineSection'), { ssr: false })
-const PhotoGallery = dynamic(() => import('@/components/PhotoGallery'), { ssr: false })
-const BirthdayLetter = dynamic(() => import('@/components/BirthdayLetter'), { ssr: false })
-const WishesSection = dynamic(() => import('@/components/WishesSection'), { ssr: false })
-const SurprisePortal = dynamic(() => import('@/components/SurprisePortal'), { ssr: false })
-const BirthdayCake = dynamic(() => import('@/components/BirthdayCake'), { ssr: false })
-const FireworksShow = dynamic(() => import('@/components/FireworksShow'), { ssr: false })
+const Navigation      = dynamic(() => import('@/components/Navigation'),      { ssr: false })
 const AudioController = dynamic(() => import('@/components/AudioController'), { ssr: false })
+const HeroSection     = dynamic(() => import('@/components/HeroSection'),     { ssr: false, loading: SectionFallback })
+const MemoryUniverse  = dynamic(() => import('@/components/MemoryUniverse'),  { ssr: false, loading: SectionFallback })
+const TimelineSection = dynamic(() => import('@/components/TimelineSection'), { ssr: false, loading: SectionFallback })
+const PhotoGallery    = dynamic(() => import('@/components/PhotoGallery'),    { ssr: false, loading: SectionFallback })
+const BirthdayLetter  = dynamic(() => import('@/components/BirthdayLetter'),  { ssr: false, loading: SectionFallback })
+const WishesSection   = dynamic(() => import('@/components/WishesSection'),   { ssr: false, loading: SectionFallback })
+const SurprisePortal  = dynamic(() => import('@/components/SurprisePortal'),  { ssr: false, loading: SectionFallback })
+const BirthdayCake    = dynamic(() => import('@/components/BirthdayCake'),    { ssr: false, loading: SectionFallback })
+const FireworksShow   = dynamic(() => import('@/components/FireworksShow'),   { ssr: false, loading: SectionFallback })
 
 export default function Home() {
   const [loading, setLoading] = useState(true)
@@ -26,7 +45,6 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true)
-    // Prevent scroll during loading
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
@@ -36,24 +54,36 @@ export default function Home() {
     document.body.style.overflow = ''
   }
 
-  if (!mounted) return null
+  if (!mounted) return <div className="fixed inset-0 bg-[#030014]" />
 
   return (
     <>
-      {/* Custom cursor */}
-      <CustomCursor />
+      <ErrorBoundary name="CustomCursor">
+        <CustomCursor />
+      </ErrorBoundary>
 
-      {/* Global ambient particles */}
-      <ParticleBackground />
+      <ErrorBoundary name="ParticleBackground">
+        <ParticleBackground />
+      </ErrorBoundary>
 
-      {/* Loading sequence */}
       <AnimatePresence>
         {loading && (
-          <LoadingScreen onComplete={handleLoadComplete} />
+          <ErrorBoundary name="LoadingScreen" fallback={
+            <div className="fixed inset-0 bg-[#030014] flex items-center justify-center z-[100000]">
+              <button
+                onClick={handleLoadComplete}
+                className="text-purple-400 text-lg"
+                style={{ fontFamily: 'Cinzel, serif' }}
+              >
+                Enter ✨
+              </button>
+            </div>
+          }>
+            <LoadingScreen onComplete={handleLoadComplete} />
+          </ErrorBoundary>
         )}
       </AnimatePresence>
 
-      {/* Main experience */}
       <AnimatePresence>
         {!loading && (
           <motion.div
@@ -61,44 +91,44 @@ export default function Home() {
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
           >
-            <Navigation />
-            <AudioController />
+            <ErrorBoundary name="Navigation"><Navigation /></ErrorBoundary>
+            <ErrorBoundary name="AudioController"><AudioController /></ErrorBoundary>
 
             <main>
               <section id="hero">
-                <HeroSection />
+                <ErrorBoundary name="HeroSection"><HeroSection /></ErrorBoundary>
               </section>
 
               <section id="memories">
-                <MemoryUniverse />
+                <ErrorBoundary name="MemoryUniverse"><MemoryUniverse /></ErrorBoundary>
               </section>
 
               <section id="timeline">
-                <TimelineSection />
+                <ErrorBoundary name="TimelineSection"><TimelineSection /></ErrorBoundary>
               </section>
 
               <section id="gallery">
-                <PhotoGallery />
+                <ErrorBoundary name="PhotoGallery"><PhotoGallery /></ErrorBoundary>
               </section>
 
               <section id="letter">
-                <BirthdayLetter />
+                <ErrorBoundary name="BirthdayLetter"><BirthdayLetter /></ErrorBoundary>
               </section>
 
               <section id="wishes">
-                <WishesSection />
+                <ErrorBoundary name="WishesSection"><WishesSection /></ErrorBoundary>
               </section>
 
               <section id="surprise">
-                <SurprisePortal />
+                <ErrorBoundary name="SurprisePortal"><SurprisePortal /></ErrorBoundary>
               </section>
 
               <section id="cake">
-                <BirthdayCake />
+                <ErrorBoundary name="BirthdayCake"><BirthdayCake /></ErrorBoundary>
               </section>
 
               <section id="fireworks">
-                <FireworksShow />
+                <ErrorBoundary name="FireworksShow"><FireworksShow /></ErrorBoundary>
               </section>
 
               {/* Footer */}
@@ -130,12 +160,8 @@ export default function Home() {
                   >
                     Happy 20th Birthday, Meenu
                   </p>
-                  <p className="text-white/40 text-sm mt-4">
-                    August 9, 2006 — August 9, 2026
-                  </p>
-                  <p className="text-white/30 text-xs mt-2">
-                    Made with ✨ and infinite love
-                  </p>
+                  <p className="text-white/40 text-sm mt-4">August 9, 2006 — August 9, 2026</p>
+                  <p className="text-white/30 text-xs mt-2">Made with ✨ and infinite love</p>
                   <div className="flex justify-center gap-3 mt-6 text-2xl">
                     {['💜', '🌟', '💗', '✨', '🎂'].map((emoji, i) => (
                       <motion.span
@@ -148,13 +174,9 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-
-                {/* Footer glow */}
                 <div
                   className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(ellipse at 50% 100%, rgba(168,85,247,0.15) 0%, transparent 60%)',
-                  }}
+                  style={{ background: 'radial-gradient(ellipse at 50% 100%, rgba(168,85,247,0.15) 0%, transparent 60%)' }}
                 />
               </footer>
             </main>
